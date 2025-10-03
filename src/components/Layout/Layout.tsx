@@ -1,12 +1,7 @@
-import { type ReactElement } from 'react'
-import ProSidebar from '../ProSidebar/ProSidebar'
-import { useLocation } from 'react-router-dom'
+import { Outlet, useLocation } from 'react-router-dom';
+import ProSidebar from '../ProSidebar/ProSidebar';
 
-interface LayoutProps {
-  children: React.ReactNode
-}
-
-const Layout = ({ children }: LayoutProps): ReactElement => {
+const Layout = () => {
   const location = useLocation()
   const getPageTitle = () => {
     switch (location.pathname) {
@@ -28,47 +23,47 @@ const Layout = ({ children }: LayoutProps): ReactElement => {
   }
 
   return (
-    <div className="flex min-h-screen bg-[#F8FAFC]">
+    <div className="flex min-h-screen bg-secondary-50">
       <ProSidebar />
       <div className="flex-1 flex flex-col">
-        <header className="bg-white shadow-sm z-10 fixed top-0 right-0 left-[260px]">
+        <header className="bg-white shadow-soft z-10 fixed top-0 right-0 left-[260px] backdrop-blur-sm bg-white/80">
           <div className="py-4 px-8 flex justify-between items-center">
             <div>
-              <h2 className="text-xl font-semibold text-gray-800">{getPageTitle()}</h2>
-              <p className="text-sm text-gray-500 mt-1">Welcome back to CivicOps Dashboard</p>
+              <h2 className="text-xl font-semibold text-secondary-900">{getPageTitle()}</h2>
+              <p className="text-sm text-secondary-500 mt-1">Welcome back to CivicOps Dashboard</p>
             </div>
             <div className="flex items-center space-x-6">
               <div className="flex items-center space-x-3">
-                <button className="relative p-2 text-gray-400 hover:text-gray-600 bg-gray-50 rounded-lg">
+                <button className="relative p-2.5 text-secondary-400 hover:text-secondary-600 bg-secondary-50 hover:bg-secondary-100 rounded-xl transition-colors">
                   <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
                   </svg>
-                  <span className="absolute top-1.5 right-1.5 w-2.5 h-2.5 bg-red-500 border-2 border-white rounded-full"></span>
+                  <span className="absolute top-2 right-2 w-2.5 h-2.5 bg-danger-500 border-2 border-white rounded-full shadow-sm"></span>
                 </button>
-                <button className="p-2 text-gray-400 hover:text-gray-600 bg-gray-50 rounded-lg">
-                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                <button className="relative inline-flex items-center p-2 hover:bg-secondary-50 rounded-xl group transition-colors">
+                  <div className="relative">
+                    <img 
+                      className="w-9 h-9 rounded-xl border-2 border-white shadow-soft" 
+                      src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80" 
+                      alt="User avatar" 
+                    />
+                    <span className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-success-500 border-2 border-white rounded-full"></span>
+                  </div>
+                  <span className="hidden md:block ml-2 text-sm font-medium text-secondary-700 group-hover:text-secondary-900">Tom Cook</span>
+                  <svg className="hidden md:block ml-2 h-5 w-5 text-secondary-400 group-hover:text-secondary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                   </svg>
                 </button>
-              </div>
-              <div className="flex items-center space-x-4 border-l pl-6">
-                <div className="w-10 h-10 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-xl flex items-center justify-center text-white font-medium shadow-lg shadow-indigo-500/25">
-                  A
-                </div>
-                <div>
-                  <span className="text-sm font-medium text-gray-700">Admin User</span>
-                  <p className="text-xs text-gray-500">admin@civicops.com</p>
-                </div>
               </div>
             </div>
           </div>
         </header>
-        <main className="flex-1 p-8 mt-[89px] max-w-[1600px] w-full mx-auto">
-          {children}
+        <main className="flex-1 mt-16 p-8">
+          <Outlet />
         </main>
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default Layout
+export default Layout;

@@ -1,7 +1,7 @@
 import { type ReactElement } from 'react'
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
-import Layout from './components/Layout/Layout'
-import DashboardPage from './modules/dashboard/DashboardPage'
+import Layout from './components/Layout/Layout.tsx'
+import DashboardPage from './modules/dashboard/DashboardPage.tsx'
 import './App.css'
 
 const App = (): ReactElement => {
