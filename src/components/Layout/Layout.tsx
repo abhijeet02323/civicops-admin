@@ -1,6 +1,6 @@
 import React from 'react';
 import { useLocation } from 'react-router-dom';
-import ProSidebar from '../ProSidebar/ProSidebar';
+import Sidebar from '../Sidebar/Sidebar';
 import './Layout.css'; // Import the new CSS file
 
 interface LayoutProps {
@@ -27,8 +27,8 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
 
   return (
     <div className="layout-container">
-      <ProSidebar />
-      <div className="layout-content">
+      <Sidebar />
+      <div className="layout-content content-with-sidebar">
         <header className="layout-header">
           <div className="layout-header-inner">
             <div>
