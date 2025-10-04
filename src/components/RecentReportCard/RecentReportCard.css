@@ -1,0 +1,82 @@
+/* RecentReportCard specific styles */
+.recent-report-card-container {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem; /* p-4 */
+  background-color: #ffffff; /* bg-white */
+  border-radius: 0.75rem; /* rounded-xl */
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06); /* shadow-soft */
+  margin-bottom: 0.75rem; /* mb-3 */
+}
+
+.recent-report-card-content-left {
+  display: flex;
+  align-items: center;
+  gap: 1rem; /* space-x-4 */
+}
+
+.recent-report-card-icon-wrapper {
+  padding: 0.5rem; /* p-2 */
+  background-color: #f9fafb; /* bg-secondary-50 */
+  border-radius: 0.5rem; /* rounded-lg */
+}
+
+.recent-report-card-icon {
+  width: 1.5rem; /* w-6 */
+  height: 1.5rem; /* h-6 */
+  color: #4a5568; /* text-secondary-600 */
+}
+
+.recent-report-card-title {
+  color: #1a202c; /* text-secondary-900 */
+  font-weight: 500; /* font-medium */
+}
+
+.recent-report-card-location {
+  color: #4a5568; /* text-secondary-500 */
+  font-size: 0.875rem; /* text-sm */
+}
+
+.recent-report-card-content-right {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem; /* space-x-3 */
+}
+
+.recent-report-card-badge {
+  padding: 0.25rem 0.75rem; /* px-3 py-1 */
+  font-size: 0.75rem; /* text-xs */
+  font-weight: 500; /* font-medium */
+  border-radius: 9999px; /* rounded-full */
+}
+
+.recent-report-card-badge.priority-high {
+  background-color: #fee2e2; /* bg-danger-50 */
+  color: #b91c1c; /* text-danger-700 */
+}
+
+.recent-report-card-badge.priority-medium {
+  background-color: #fffbeb; /* bg-warning-50 */
+  color: #b45309; /* text-warning-700 */
+}
+
+.recent-report-card-badge.priority-low {
+  background-color: #dcfce7; /* bg-success-50 */
+  color: #15803d; /* text-success-700 */
+}
+
+.recent-report-card-badge.status-pending {
+  background-color: #f3f4f6; /* bg-secondary-100 */
+  color: #374151; /* text-secondary-700 */
+}
+
+.recent-report-card-badge.status-in-progress {
+  background-color: #eef2ff; /* bg-primary-50 */
+  color: #4f46e5; /* text-primary-700 */
+}
+
+.recent-report-card-badge.status-resolved {
+  background-color: #dcfce7; /* bg-success-50 */
+  color: #15803d; /* text-success-700 */
+}

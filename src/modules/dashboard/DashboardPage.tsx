@@ -1,6 +1,7 @@
 import { type ReactElement } from 'react'
 import StatsCard from '../../components/StatsCard/StatsCard'
 import RecentReportCard from '../../components/RecentReportCard/RecentReportCard'
+import './DashboardPage.css' // Import the new CSS file
 
 const DashboardPage = (): ReactElement => {
   const statsData = [
@@ -62,13 +63,13 @@ const DashboardPage = (): ReactElement => {
   ];
 
   return (
-    <div className="space-y-8">
+    <div className="dashboard-page-container">
       <div>
-        <h1 className="text-2xl font-semibold text-secondary-900">Dashboard</h1>
-        <p className="text-secondary-600 mt-1">Manage civic reports and municipal operations</p>
+        <h1 className="dashboard-page-header">Dashboard</h1>
+        <p className="dashboard-page-description">Manage civic reports and municipal operations</p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="stats-grid">
         {statsData.map((stat, index) => (
           <StatsCard
             key={index}
@@ -81,7 +82,7 @@ const DashboardPage = (): ReactElement => {
       </div>
 
       <div>
-        <h2 className="text-lg font-semibold text-secondary-900 mb-4">Recent Reports</h2>
+        <h2 className="recent-reports-header">Recent Reports</h2>
         <div>
           {recentReports.map((report, index) => (
             <RecentReportCard

@@ -1,0 +1,40 @@
+/* DashboardPage specific styles */
+.dashboard-page-container {
+  padding: 2rem; /* space-y-8 */
+}
+
+.dashboard-page-header {
+  font-size: 1.5rem; /* text-2xl */
+  font-weight: 600; /* font-semibold */
+  color: #1a202c; /* text-secondary-900 */
+}
+
+.dashboard-page-description {
+  color: #4a5568; /* text-secondary-600 */
+  margin-top: 0.25rem; /* mt-1 */
+}
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(1, minmax(0, 1fr)); /* grid-cols-1 */
+  gap: 1.5rem; /* gap-6 */
+}
+
+@media (min-width: 768px) { /* md */
+  .stats-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)); /* md:grid-cols-2 */
+  }
+}
+
+@media (min-width: 1024px) { /* lg */
+  .stats-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr)); /* lg:grid-cols-4 */
+  }
+}
+
+.recent-reports-header {
+  font-size: 1.125rem; /* text-lg */
+  font-weight: 600; /* font-semibold */
+  color: #1a202c; /* text-secondary-900 */
+  margin-bottom: 1rem; /* mb-4 */
+}

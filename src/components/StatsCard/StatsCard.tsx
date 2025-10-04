@@ -1,4 +1,5 @@
 import React from 'react';
+import './StatsCard.css'; // Import the new CSS file
 
 interface StatsCardProps {
   title: string;
@@ -11,21 +12,34 @@ interface StatsCardProps {
 }
 
 const StatsCard: React.FC<StatsCardProps> = ({ title, value, change, icon }) => {
+  const iconWrapperClass = () => {
+    switch (title) {
+      case 'Total Reports':
+        return 'stats-card-icon-wrapper total-reports';
+      case 'Resolved Today':
+        return 'stats-card-icon-wrapper resolved-today';
+      case 'In Progress':
+        return 'stats-card-icon-wrapper in-progress';
+      case 'Active Users':
+        return 'stats-card-icon-wrapper active-users';
+      default:
+        return 'stats-card-icon-wrapper';
+    }
+  };
+
   return (
-    <div className="bg-white rounded-xl p-6 shadow-soft">
-      <div className="flex items-center justify-between">
+    <div className="stats-card-container">
+      <div className="stats-card-content">
         <div>
-          <p className="text-sm text-secondary-600">{title}</p>
-          <h3 className="text-2xl font-semibold text-secondary-900 mt-1">{value}</h3>
-          <p className={`text-sm mt-2 flex items-center ${
-            change.trend === 'up' ? 'text-success-600' : 'text-danger-600'
-          }`}>
+          <p className="stats-card-title">{title}</p>
+          <h3 className="stats-card-value">{value}</h3>
+          <p className={`stats-card-change ${change.trend}`}>
             {change.trend === 'up' ? (
-              <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="stats-card-change-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
               </svg>
             ) : (
-              <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="stats-card-change-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 17h8m0 0v-8m0 8l-8-8-4 4-6-6" />
               </svg>
             )}
@@ -33,12 +47,7 @@ const StatsCard: React.FC<StatsCardProps> = ({ title, value, change, icon }) => 
           </p>
         </div>
         {icon && (
-          <div className={`p-3 rounded-lg ${
-            title === 'Total Reports' ? 'bg-primary-50 text-primary-600' :
-            title === 'Resolved Today' ? 'bg-success-50 text-success-600' :
-            title === 'In Progress' ? 'bg-warning-50 text-warning-600' :
-            'bg-info-50 text-info-600'
-          }`}>
+          <div className={iconWrapperClass()}>
             {icon}
           </div>
         )}
