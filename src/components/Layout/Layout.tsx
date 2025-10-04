@@ -1,26 +1,29 @@
-import { Outlet, useLocation } from 'react-router-dom';
+import React from 'react';
+import { useLocation } from 'react-router-dom';
+
 import ProSidebar from '../ProSidebar/ProSidebar';
 
-const Layout = () => {
-  const location = useLocation()
+interface LayoutProps {
+  children: React.ReactNode;
+}
+
+const Layout: React.FC<LayoutProps> = ({ children }) => {
+  const location = useLocation();
+
   const getPageTitle = () => {
     switch (location.pathname) {
       case '/':
-        return 'Dashboard'
+        return 'Dashboard';
       case '/reports':
-        return 'Reports'
-      case '/analytics':
-        return 'Analytics'
-      case '/complaints':
-        return 'Complaints'
-      case '/departments':
-        return 'Departments'
+        return 'Reports';
+      case '/users':
+        return 'Users';
       case '/settings':
-        return 'Settings'
+        return 'Settings';
       default:
-        return 'Dashboard'
+        return 'Dashboard';
     }
-  }
+  };
 
   return (
     <div className="flex min-h-screen bg-secondary-50">
@@ -59,7 +62,7 @@ const Layout = () => {
           </div>
         </header>
         <main className="flex-1 mt-16 p-8">
-          <Outlet />
+          {children}
         </main>
       </div>
     </div>
