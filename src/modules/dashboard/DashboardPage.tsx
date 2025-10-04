@@ -1,6 +1,7 @@
 import { type ReactElement } from 'react'
 import StatsCard from '../../components/StatsCard/StatsCard'
 import RecentReportCard from '../../components/RecentReportCard/RecentReportCard'
+import OLMap from '../../components/Map/Map.tsx'
 import './DashboardPage.css' // Import the new CSS file
 
 const DashboardPage = (): ReactElement => {
@@ -51,12 +52,17 @@ const DashboardPage = (): ReactElement => {
     {
       title: 'Pothole on Main Street',
       location: 'Main St & 5th Ave',
+      // sample coordinates in lon/lat (India)
+      longitude: 72.8777,
+      latitude: 19.0760,
       priority: 'High' as const,
       status: 'In Progress' as const
     },
     {
       title: 'Broken Streetlight',
       location: 'Oak St & 2nd Ave',
+      longitude: 77.1025,
+      latitude: 28.7041,
       priority: 'Medium' as const,
       status: 'Pending' as const
     }
@@ -79,6 +85,12 @@ const DashboardPage = (): ReactElement => {
             icon={stat.icon}
           />
         ))}
+      </div>
+      <div style={{ marginTop: 24 }}>
+        <h2 className="recent-reports-header">Map View</h2>
+        <OLMap
+          reports={recentReports.map((r, i) => ({ id: i, title: r.title, longitude: r.longitude as number, latitude: r.latitude as number }))}
+        />
       </div>
 
       <div>
