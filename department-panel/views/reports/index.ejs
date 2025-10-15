@@ -1,0 +1,14 @@
+<%- include('../layout', { admin: admin, title: 'Reports', body: (function(){ %>
+  <h3>Status Breakdown</h3>
+  <canvas id="statusChart" width="400" height="200"></canvas>
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script>
+    (function(){
+      const stats = <%- JSON.stringify(stats || {}) %>
+      const labels = Object.keys((stats.status_breakdown) || {})
+      const data = labels.map(l => stats.status_breakdown[l])
+      new Chart(document.getElementById('statusChart'), { type: 'doughnut', data: { labels, datasets: [{ data, backgroundColor: ['#f59e0b','#3b82f6','#10b981','#ef4444'] }] } })
+    })()
+  </script>
+<% })() }) %>

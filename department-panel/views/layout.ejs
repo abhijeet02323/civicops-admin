@@ -1,0 +1,11 @@
+<%- include('partials/header', { admin: admin, title: title }) %>
+<div class="layout">
+  <%- include('partials/sidebar') %>
+
+  <main class="content">
+    <div class="container">
+      <%- body %>
+    </div>
+  </main>
+</div>
+<%- include('partials/footer') %>
