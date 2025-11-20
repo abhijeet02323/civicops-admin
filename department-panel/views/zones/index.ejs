@@ -1,0 +1,11 @@
+<%- include('../layout', { admin: admin, title: 'Zones', body: (function(){ %>
+  <div class="zones-grid">
+    <% Object.keys(zones).forEach(function(zone){ %>
+      <div class="zone-card">
+        <h4><%= zone %></h4>
+        <p><strong><%= zones[zone] %></strong> active complaints</p>
+        <a class="btn-primary" href="/department/issues?zone=<%= encodeURIComponent(zone) %>">View</a>
+      </div>
+    <% }) %>
+  </div>
+<% })() }) %>

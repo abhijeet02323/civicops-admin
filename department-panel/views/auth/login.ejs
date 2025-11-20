@@ -1,0 +1,22 @@
+<! -- login page -->
+<div class="auth-wrap">
+  <div class="auth-card">
+    <h2>Department Login</h2>
+    <% if (error) { %>
+      <div class="alert alert-error"><%= error %></div>
+    <% } %>
+    <form method="post" action="/department/login">
+      <div class="form-row">
+        <label>Username</label>
+        <input name="username" type="text" required />
+      </div>
+      <div class="form-row">
+        <label>Password</label>
+        <input name="password" type="password" required />
+      </div>
+      <div class="form-row">
+        <button class="btn-primary" type="submit">Sign in</button>
+      </div>
+    </form>
+  </div>
+</div>

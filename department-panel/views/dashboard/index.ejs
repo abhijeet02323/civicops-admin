@@ -1,0 +1,20 @@
+<%- include('../layout', { admin: admin, title: 'Dashboard', body: (function(){ %>
+  <div class="cards-grid">
+    <div class="card">
+      <h3>Total Complaints</h3>
+      <div class="card-value"><%= stats.total %></div>
+    </div>
+    <div class="card">
+      <h3>Reported</h3>
+      <div class="card-value"><%= stats.statusCounts.reported || 0 %></div>
+    </div>
+    <div class="card">
+      <h3>In Progress</h3>
+      <div class="card-value"><%= stats.statusCounts.in_progress || 0 %></div>
+    </div>
+    <div class="card">
+      <h3>Resolved</h3>
+      <div class="card-value"><%= stats.statusCounts.resolved || 0 %></div>
+    </div>
+  </div>
+<% })() }) %>

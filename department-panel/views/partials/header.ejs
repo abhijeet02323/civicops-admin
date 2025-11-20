@@ -1,0 +1,21 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title><%= title || 'Department Panel' %></title>
+    <link rel="stylesheet" href="/css/main.css" />
+  </head>
+  <body>
+    <div class="app-root">
+      <header class="topbar">
+        <div class="topbar-inner">
+          <div class="brand">Department Panel</div>
+          <div class="topbar-right">
+            <% if (admin) { %>
+              <span class="admin-name">Welcome, <%= admin.full_name || admin.username %></span>
+              <a href="/department/logout" class="btn-ghost">Logout</a>
+            <% } %>
+          </div>
+        </div>
+      </header>

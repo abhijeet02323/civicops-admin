@@ -1,0 +1,61 @@
+<%- include('../layout', { admin: admin, title: 'Issues', body: (function(){ %>
+  <div class="page-actions">
+    <form method="get" action="/department/issues">
+      <select name="status"><option value="">All</option><option value="reported">Reported</option><option value="in_progress">In Progress</option><option value="resolved">Resolved</option></select>
+      <select name="priority"><option value="">Any</option><option>low</option><option>medium</option><option>high</option></select>
+      <input name="zone" placeholder="Zone" />
+      <button class="btn-secondary" type="submit">Filter</button>
+    </form>
+  </div>
+
+  <div class="table-container">
+    <table class="table">
+      <thead>
+        <tr><th>ID</th><th>Title</th><th>Category</th><th>Zone</th><th>Status</th><th>Priority</th><th>Assigned</th><th>Actions</th></tr>
+      </thead>
+      <tbody>
+        <% issues.forEach(function(issue){ %>
+          <tr>
+            <td><%= issue.id %></td>
+            <td><%= issue.title %></td>
+            <td><%= issue.category %></td>
+            <td><%= issue.location?.address || '-' %></td>
+            <td><%= issue.status %></td>
+            <td><%= issue.priority %></td>
+            <td><%= (issue.assigned_to && issue.assigned_to.name) || '-' %></td>
+            <td>
+              <button class="btn-secondary assign-btn" data-id="<%= issue.id %>">Assign</button>
+              <button class="btn-ghost handover-btn" data-id="<%= issue.id %>">Handover</button>
+              <button class="btn-success resolve-btn" data-id="<%= issue.id %>">Resolve</button>
+            </td>
+          </tr>
+        <% }) %>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Modals placeholder -->
+  <div id="modal-root"></div>
+
+  <script>
+    // basic JS to open modals and call endpoints
+    document.addEventListener('click', function(e){
+      if (e.target.matches('.resolve-btn')){
+        const id = e.target.dataset.id
+        if (confirm('Mark issue '+id+' as resolved?')){
+          fetch('/department/issues/'+id+'/resolve', { method: 'POST' }).then(()=> location.reload())
+        }
+      }
+      if (e.target.matches('.assign-btn')){
+        const id = e.target.dataset.id
+        const staffId = prompt('Enter staff id to assign')
+        if (staffId) fetch('/department/issues/'+id+'/assign', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ staffId }) }).then(()=> location.reload())
+      }
+      if (e.target.matches('.handover-btn')){
+        const id = e.target.dataset.id
+        const depId = prompt('Enter department id to handover')
+        if (depId) fetch('/department/issues/'+id+'/handover', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ departmentId: depId }) }).then(()=> location.reload())
+      }
+    })
+  </script>
+<% })() }) %>
