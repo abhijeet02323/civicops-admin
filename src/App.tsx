@@ -8,6 +8,7 @@ import AnalyticsPage from './modules/analytics/AnalyticsPage.tsx'
 import ComplaintsPage from './modules/complaints/ComplaintsPage.tsx'
 import DepartmentsPage from './modules/departments/DepartmentsPage.tsx'
 import SettingsPage from './modules/settings/SettingsPage.tsx'
+import FieldStaffPage from './modules/field-staff/FieldStaffPage.tsx'
 import './App.css'
 
 const App = (): ReactElement => {
@@ -25,6 +26,7 @@ const App = (): ReactElement => {
                 <Route path="/analytics" element={<AnalyticsPage />} />
                 <Route path="/complaints" element={<ComplaintsPage />} />
                 <Route path="/departments" element={<DepartmentsPage />} />
+                <Route path="/field-staffs" element={<FieldStaffPage />} />
                 <Route path="/settings" element={<SettingsPage />} />
               </Routes>
             </Layout>

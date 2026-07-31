@@ -10,6 +10,7 @@ const pageCopy: Record<string, { title: string; subtitle: string }> = {
   '/reports': { title: 'Reports', subtitle: 'Review, assign and resolve citizen requests.' },
   '/analytics': { title: 'Analytics', subtitle: 'Understand service performance across the city.' },
   '/departments': { title: 'Departments', subtitle: 'Coordinate teams and workloads.' },
+  '/field-staffs': { title: 'Field workforce', subtitle: 'Monitor task delivery and completion evidence.' },
   '/users': { title: 'Users', subtitle: 'Manage administrator access.' },
   '/settings': { title: 'Settings', subtitle: 'Configure your CivicOps workspace.' },
 }
@@ -17,6 +18,7 @@ const pageCopy: Record<string, { title: string; subtitle: string }> = {
 const Layout: React.FC<LayoutProps> = ({ children }) => {
   const { pathname } = useLocation()
   const [profileOpen, setProfileOpen] = useState(false)
+  const [now, setNow] = useState(() => new Date())
   const profileRef = useRef<HTMLDivElement>(null)
   const page = pageCopy[pathname] ?? { title: 'CivicOps', subtitle: 'Municipal operations workspace.' }
 
@@ -28,6 +30,8 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
     return () => document.removeEventListener('mousedown', close)
   }, [])
 
+  useEffect(() => { const timer = window.setInterval(() => setNow(new Date()), 1000); return () => window.clearInterval(timer) }, [])
+
   return <div className="layout-container">
     <Sidebar />
     <div className="layout-content content-with-sidebar">
@@ -35,6 +39,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
         <div className="layout-header-inner">
           <div className="page-intro"><p className="page-eyebrow">CIVICOPS / ADMIN</p><h1 className="layout-title">{page.title}</h1><p className="layout-subtitle">{page.subtitle}</p></div>
           <div className="layout-header-actions">
+            <div className="admin-clock" title="Local system time"><strong>{now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}</strong><span>{now.toLocaleDateString([], { weekday: 'short', day: 'numeric', month: 'short' })}</span></div>
             <button className="notification-button" type="button" aria-label="View 3 notifications" title="Notifications">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M15 17h5l-1.4-1.4a2 2 0 0 1-.6-1.4V11a6 6 0 0 0-4-5.66V5a2 2 0 1 0-4 0v.34A6 6 0 0 0 7 11v3.16c0 .53-.21 1.04-.59 1.42L5 17h5m5 0v1a3 3 0 0 1-6 0v-1" /></svg><span className="notification-badge">3</span>
             </button>
