@@ -1,414 +1,45 @@
 import { type ReactElement, useEffect, useMemo, useState } from 'react'
 import './ReportsPage.css'
-import auth from '../../services/auth'
 import OLMap from '../../components/Map/Map'
 import demoComplaints from './demo-complaints.json'
 
-type Report = {
-  id: string
-  title: string
-  description?: string
-  category?: string
-  subcategory?: string
-  status?: string
-  priority?: string
-  department?: { id: number; name: string }
-  location?: {
-    latitude: number
-    longitude: number
-    address?: string
-  }
-  image_url?: string
-  voice_note_url?: string
-  reported_by?: { id?: string; name?: string; phone?: string }
-  created_at?: string
-  updated_at?: string
-}
-
+type Report = { id:string; title:string; description?:string; category?:string; subcategory?:string; status?:string; priority?:string; department?:{id:number;name:string}; location?:{latitude:number;longitude:number;address?:string}; image_url?:string; voice_note_url?:string; reported_by?:{id?:string;name?:string;phone?:string}; created_at?:string; updated_at?:string }
+type Action = 'assign' | 'resolve' | 'reject' | null
+type ApiDepartment = { id: number; name?: string; department_name?: string }
 const API_BASE = import.meta.env.VITE_CIVICOPS_API_BASE || 'https://civic-ops.onrender.com'
+const label = (value?: string) => value ? value.replaceAll('_', ' ').replace(/\b\w/g, char => char.toUpperCase()) : 'Unassigned'
 
 const ReportsPage = (): ReactElement => {
-  const [reports, setReports] = useState<Report[]>([])
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
+  const [reports, setReports] = useState<Report[]>([]); const [loading, setLoading] = useState(true); const [error, setError] = useState<string | null>(null)
+  const [statusFilter, setStatusFilter] = useState(''); const [categoryFilter, setCategoryFilter] = useState(''); const [priorityFilter, setPriorityFilter] = useState(''); const [query, setQuery] = useState(''); const [page, setPage] = useState(1); const [total, setTotal] = useState(0)
+  const [sortField, setSortField] = useState<'created_at'|'category'|'priority'>('created_at'); const [sortDir, setSortDir] = useState<'asc'|'desc'>('desc'); const [selected, setSelected] = useState<Report | null>(null); const [mapReport, setMapReport] = useState<Report | null>(null)
+  const [actionReport, setActionReport] = useState<Report | null>(null); const [action, setAction] = useState<Action>(null); const [actionValue, setActionValue] = useState(''); const [actionLoading, setActionLoading] = useState(false); const [openMenu, setOpenMenu] = useState<string | null>(null)
+  const [departments, setDepartments] = useState<Array<{id:number;name:string}>>([])
 
-  const [statusFilter, setStatusFilter] = useState('')
-  const [categoryFilter, setCategoryFilter] = useState('')
-  const [priorityFilter, setPriorityFilter] = useState('')
-  const [query, setQuery] = useState('')
-
-  const [page, setPage] = useState(1)
-  const [limit] = useState(20)
-  const [total, setTotal] = useState(0)
-
-  const [sortField, setSortField] = useState<'created_at' | 'category' | 'priority' | ''>('')
-  const [sortDir, setSortDir] = useState<'asc' | 'desc'>('desc')
-
-  const [selected, setSelected] = useState<Report | null>(null)
-  const [showDetails, setShowDetails] = useState(false)
-  const [showMap, setShowMap] = useState(false)
-  const [mapLocations, setMapLocations] = useState<any[]>([])
-
-  const [departments, setDepartments] = useState<Array<{ id: number; name: string }>>([])
-  const [actionLoading, setActionLoading] = useState(false)
-  const [showAssign, setShowAssign] = useState(false)
-  const [showRejectModal, setShowRejectModal] = useState(false)
-  const [showResolveModal, setShowResolveModal] = useState(false)
-  const [formValue, setFormValue] = useState('')
-  const [activeIssueId, setActiveIssueId] = useState<string | null>(null)
-
-  const token = auth.getToken()
-
-  useEffect(() => {
-    fetchDepartments()
-  }, [])
-
-  const fetchDepartments = async () => {
-    try {
-      const resp = await fetch(`${API_BASE}/admin/departments`, { headers: { Authorization: `Bearer ${token}` } })
-      if (resp.ok) {
-        const json = await resp.json()
-        // assuming json.data or json
-        const list = json.data?.departments || json.data || json || []
-        setDepartments(list.map((d: any) => ({ id: d.id, name: d.name || d.department_name || d })))
-      } else {
-        // fallback hardcoded
-        setDepartments([
-          { id: 1, name: 'Solid Waste Management' },
-          { id: 2, name: 'Public Works' },
-          { id: 3, name: 'Water Supply' }
-        ])
-      }
-    } catch (err) {
-      setDepartments([
-        { id: 1, name: 'Solid Waste Management' },
-        { id: 2, name: 'Public Works' },
-        { id: 3, name: 'Water Supply' }
-      ])
-    }
-  }
-
-  const fetchReports = async () => {
-    setLoading(true)
-    setError(null)
-    try {
-      const params = new URLSearchParams()
-      if (statusFilter) params.append('status', statusFilter)
-      if (categoryFilter) params.append('category', categoryFilter)
-      if (priorityFilter) params.append('priority', priorityFilter)
-      params.append('page', String(page))
-      params.append('limit', String(limit))
-
-      const res = await fetch(`${API_BASE}/admin/issues?${params.toString()}`, {
-        headers: { Authorization: token ? `Bearer ${token}` : '' }
-      })
-      if (res.status === 401 || res.status === 403) {
-        window.location.href = '/login'
-        return
-      }
-      if (!res.ok) {
-        const err = await res.json().catch(() => ({ detail: 'Failed to load' }))
-        throw new Error(err.detail || 'Failed to load reports')
-      }
-      const json = await res.json()
-      const data = json.data || {}
-      setReports(data.issues || [])
-      setTotal(data.total || (data.issues || []).length)
-    } catch (err: any) {
-      setError(err.message || String(err))
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  useEffect(() => {
-    fetchReports()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [statusFilter, categoryFilter, priorityFilter, page])
-
-  const refresh = () => {
-    fetchReports()
-  }
-
-  const loadDemo = () => {
-    try {
-      // @ts-ignore - JSON import
-      setReports((demoComplaints as unknown as Report[]))
-      setTotal((demoComplaints as unknown as Report[]).length)
-    } catch (err) {
-      console.error('Failed to load demo complaints', err)
-    }
-  }
-
-  const categories = useMemo(() => {
-    const set = new Set<string>()
-    reports.forEach(r => { if (r.category) set.add(r.category) })
-    return Array.from(set)
-  }, [reports])
-
-  const filtered = useMemo(() => {
-    const q = query.trim().toLowerCase()
-    let list = reports.filter(r => {
-      if (!q) return true
-      return (r.title || '').toLowerCase().includes(q) || (r.description || '').toLowerCase().includes(q) || (r.reported_by?.name || '').toLowerCase().includes(q)
-    })
-
-    if (sortField) {
-      list = list.sort((a: any, b: any) => {
-        const av = a[sortField] || ''
-        const bv = b[sortField] || ''
-        if (av < bv) return sortDir === 'asc' ? -1 : 1
-        if (av > bv) return sortDir === 'asc' ? 1 : -1
-        return 0
-      })
-    }
-    return list
-  }, [reports, query, sortField, sortDir])
-
-  function badgeClass(status?: string) {
-    switch (status) {
-      case 'reported': return 'badge badge-gray'
-      case 'in_progress': return 'badge badge-orange'
-      case 'resolved': return 'badge badge-green'
-      case 'rejected': return 'badge badge-red'
-      default: return 'badge'
-    }
-  }
-
-  const openDetails = (r: Report) => {
-    setSelected(r)
-    setShowDetails(true)
-  }
-
-  const closeDetails = () => { setSelected(null); setShowDetails(false) }
-
-  const openMapFor = async (r: Report) => {
-    try {
-      const res = await fetch(`${API_BASE}/admin/issues/locations?category=&status=&priority=`, { headers: { Authorization: token ? `Bearer ${token}` : '' } })
-      const json = await res.json()
-      const locs = json.data?.locations || []
-      // center on selected
-      const selectedLoc = locs.find((l: any) => l.issue_id === r.id) || r.location && { issue_id: r.id, latitude: r.location.latitude, longitude: r.location.longitude, title: r.title, reported_by: r.reported_by?.name }
-      const points = selectedLoc ? [selectedLoc] : locs
-      setMapLocations(points.map((p: any) => ({ id: p.issue_id || p.id, title: p.title, longitude: p.longitude || p.longitude, latitude: p.latitude || p.latitude })))
-      setShowMap(true)
-    } catch (err) {
-      alert('Failed to load map data')
-    }
-  }
-
-  const doAssignDepartment = async (issueId: string, deptId: number) => {
-    setActionLoading(true)
-    try {
-      const res = await fetch(`${API_BASE}/admin/issues/${issueId}`, { method: 'PATCH', headers: { 'Content-Type':'application/json', Authorization: token ? `Bearer ${token}` : '' }, body: JSON.stringify({ department_id: deptId }) })
-      if (!res.ok) throw new Error('Failed to assign')
-      // update local
-      setReports(prev => prev.map(r => r.id === issueId ? { ...r, department: departments.find(d => d.id === deptId) } : r))
-      alert('Assigned successfully')
-    } catch (err: any) {
-      alert(err.message || 'Error')
-    } finally { setActionLoading(false) }
-  }
-
-  const doReject = async (issueId: string, reason: string) => {
-    setActionLoading(true)
-    try {
-      const res = await fetch(`${API_BASE}/admin/issues/${issueId}`, { method: 'PATCH', headers: { 'Content-Type':'application/json', Authorization: token ? `Bearer ${token}` : '' }, body: JSON.stringify({ status: 'rejected', reject_reason: reason }) })
-      if (!res.ok) throw new Error('Failed to reject')
-      setReports(prev => prev.map(r => r.id === issueId ? { ...r, status: 'rejected' } : r))
-      alert('Rejected')
-    } catch (err: any) {
-      alert(err.message || 'Error')
-    } finally { setActionLoading(false) }
-  }
-
-  const doResolve = async (issueId: string, resolution: string) => {
-    setActionLoading(true)
-    try {
-      const res = await fetch(`${API_BASE}/admin/issues/${issueId}`, { method: 'PATCH', headers: { 'Content-Type':'application/json', Authorization: token ? `Bearer ${token}` : '' }, body: JSON.stringify({ status: 'resolved', resolution: resolution }) })
-      if (!res.ok) throw new Error('Failed to resolve')
-      setReports(prev => prev.map(r => r.id === issueId ? { ...r, status: 'resolved' } : r))
-      alert('Marked as resolved')
-    } catch (err: any) {
-      alert(err.message || 'Error')
-    } finally { setActionLoading(false) }
-  }
-
-  return (
-    <div className="reports-page-container reports-layout">
-    <div className="filters-col">
-        <h3>Filters</h3>
-        <div className="filter-row">
-          <label>Status</label>
-          <select value={statusFilter} onChange={e => setStatusFilter(e.target.value)}>
-            <option value="">All</option>
-            <option value="reported">reported</option>
-            <option value="in_progress">in_progress</option>
-            <option value="resolved">resolved</option>
-            <option value="rejected">rejected</option>
-          </select>
-        </div>
-
-        <div className="filter-row">
-          <label>Category</label>
-          <select value={categoryFilter} onChange={e => setCategoryFilter(e.target.value)}>
-            <option value="">All</option>
-            {categories.map(c => <option key={c} value={c}>{c}</option>)}
-          </select>
-        </div>
-
-        <div className="filter-row">
-          <label>Priority</label>
-          <select value={priorityFilter} onChange={e => setPriorityFilter(e.target.value)}>
-            <option value="">All</option>
-            <option value="unassigned">unassigned</option>
-            <option value="low">low</option>
-            <option value="medium">medium</option>
-            <option value="high">high</option>
-            <option value="urgent">urgent</option>
-          </select>
-        </div>
-
-        <div style={{ marginTop: 12 }}>
-          <button className="btn-primary" onClick={refresh}>↻ Refresh Data</button>
-        </div>
-      </div>
-
-      <div className="list-col">
-        <div className="list-header">
-          <div>
-            <h1>Reports</h1>
-            <p className="muted">Centralized supervision — view & manage complaints</p>
-          </div>
-          <div style={{ display: 'flex', gap: 8 }}>
-            <input className="input" placeholder="Search by title, desc, reporter..." value={query} onChange={e => setQuery(e.target.value)} />
-            <button className="btn-ghost" onClick={loadDemo}>Load Demo Complaints</button>
-          </div>
-        </div>
-
-        {loading && <div className="loading">Loading reports...</div>}
-        {error && <div className="alert alert-error">{error}</div>}
-
-        <div className="table-container">
-          <table className="table">
-            <thead>
-              <tr>
-                <th>Issue ID</th>
-                <th onClick={() => { setSortField('category'); setSortDir(sortDir === 'asc' ? 'desc' : 'asc') }}>Category</th>
-                <th>Title</th>
-                <th onClick={() => { setSortField('priority'); setSortDir(sortDir === 'asc' ? 'desc' : 'asc') }}>Priority</th>
-                <th>Status</th>
-                <th>Department</th>
-                <th>Reported By</th>
-                <th onClick={() => { setSortField('created_at'); setSortDir(sortDir === 'asc' ? 'desc' : 'asc') }}>Date Reported</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filtered.map(r => (
-                <tr key={r.id} className="hover-row">
-                  <td>{r.id}</td>
-                  <td>{r.category || '-'}</td>
-                  <td><button className="link-button" onClick={() => openDetails(r)}>{r.title}</button></td>
-                  <td>{r.priority || '-'}</td>
-                  <td><span className={badgeClass(r.status)}>{r.status}</span></td>
-                  <td>{r.department?.name || '-'}</td>
-                  <td>{r.reported_by?.name || '-'}</td>
-                  <td>{r.created_at ? new Date(r.created_at).toLocaleString() : '-'}</td>
-                  <td>
-                    <button className="btn-secondary" onClick={() => openDetails(r)}>View</button>
-                    <button className="btn-ghost" onClick={() => { setActiveIssueId(r.id); setShowAssign(true); setFormValue('') }}>Assign</button>
-                    <button className="btn-danger" onClick={() => { setActiveIssueId(r.id); setShowRejectModal(true); setFormValue('') }}>Reject</button>
-                    <button className="btn-success" onClick={() => { setActiveIssueId(r.id); setShowResolveModal(true); setFormValue('') }}>Mark Solved</button>
-                    <button className="btn-secondary" onClick={() => openMapFor(r)}>View on Map</button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-
-        <div className="pagination">
-          <button disabled={page <= 1} onClick={() => setPage(p => Math.max(1, p-1))}>&lt; Prev</button>
-          <span>Page {page} — Showing {filtered.length} of {total || filtered.length}</span>
-          <button onClick={() => setPage(p => p+1)}>Next &gt;</button>
-        </div>
-      </div>
-
-      {showDetails && selected && (
-        <div className="modal">
-          <div className="modal-card">
-            <h3>{selected.title}</h3>
-            <p className="muted">{selected.category} — {selected.subcategory}</p>
-            <p>{selected.description}</p>
-            {selected.image_url && <img src={selected.image_url} alt="issue" style={{ maxWidth: '100%', borderRadius: 8 }} />}
-            {selected.voice_note_url && <audio controls src={selected.voice_note_url} />}
-            <div><strong>Location:</strong> {selected.location?.address || '-'} ({selected.location?.latitude},{selected.location?.longitude})</div>
-            <div><strong>Reported by:</strong> {selected.reported_by?.name} ({selected.reported_by?.phone})</div>
-            <div><strong>Created:</strong> {selected.created_at} <strong>Updated:</strong> {selected.updated_at}</div>
-            <div style={{ marginTop: 12 }}>
-              <button className="btn-primary" onClick={() => { setShowDetails(false); setShowMap(true); openMapFor(selected) }}>Open on Map</button>
-              <button className="btn-ghost" onClick={closeDetails}>Close</button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {showMap && (
-        <div className="modal">
-          <div className="modal-card large">
-            <button className="btn-ghost" onClick={() => setShowMap(false)}>Close Map</button>
-            <OLMap reports={mapLocations.map(m => ({ id: m.id, title: m.title, longitude: m.longitude, latitude: m.latitude }))} />
-          </div>
-        </div>
-      )}
-
-      {showAssign && activeIssueId && (
-        <div className="modal">
-          <div className="modal-card">
-            <h3>Assign to Department</h3>
-            <div style={{ marginBottom: 8 }}>
-              <select value={formValue} onChange={e => setFormValue(e.target.value)}>
-                <option value="">Select department</option>
-                {departments.map(d => <option key={d.id} value={String(d.id)}>{d.name}</option>)}
-              </select>
-            </div>
-            <div style={{ display:'flex', gap:8 }}>
-              <button className="btn-primary" disabled={actionLoading || !formValue} onClick={() => { doAssignDepartment(activeIssueId, Number(formValue)); setShowAssign(false); setActiveIssueId(null) }}>Assign</button>
-              <button className="btn-ghost" onClick={() => { setShowAssign(false); setActiveIssueId(null) }}>Cancel</button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {showRejectModal && activeIssueId && (
-        <div className="modal">
-          <div className="modal-card">
-            <h3>Reject Report</h3>
-            <textarea rows={4} value={formValue} onChange={e => setFormValue(e.target.value)} placeholder="Reason for rejection" style={{ width: '100%', padding:8, borderRadius:6 }} />
-            <div style={{ display:'flex', gap:8, marginTop:8 }}>
-              <button className="btn-danger" disabled={actionLoading || !formValue.trim()} onClick={() => { doReject(activeIssueId, formValue); setShowRejectModal(false); setActiveIssueId(null) }}>Reject</button>
-              <button className="btn-ghost" onClick={() => { setShowRejectModal(false); setActiveIssueId(null) }}>Cancel</button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {showResolveModal && activeIssueId && (
-        <div className="modal">
-          <div className="modal-card">
-            <h3>Mark as Resolved</h3>
-            <textarea rows={4} value={formValue} onChange={e => setFormValue(e.target.value)} placeholder="Resolution description" style={{ width: '100%', padding:8, borderRadius:6 }} />
-            <div style={{ display:'flex', gap:8, marginTop:8 }}>
-              <button className="btn-success" disabled={actionLoading || !formValue.trim()} onClick={() => { doResolve(activeIssueId, formValue); setShowResolveModal(false); setActiveIssueId(null) }}>Resolve</button>
-              <button className="btn-ghost" onClick={() => { setShowResolveModal(false); setActiveIssueId(null) }}>Cancel</button>
-            </div>
-          </div>
-        </div>
-      )}
-
-    </div>
-  )
+  const fetchReports = async () => { setLoading(true); setError(null); try { const params = new URLSearchParams({ page:String(page), limit:'20' }); if(statusFilter)params.set('status',statusFilter);if(categoryFilter)params.set('category',categoryFilter);if(priorityFilter)params.set('priority',priorityFilter); const res=await fetch(`${API_BASE}/admin/issues?${params}`); if(!res.ok)throw new Error('Unable to load reports. Check the CivicOps API connection.'); const data=(await res.json()).data || {}; setReports(data.issues || []); setTotal(data.total || (data.issues || []).length) } catch(err) { setError(err instanceof Error ? err.message : 'Unable to load reports.'); setReports([]) } finally { setLoading(false) } }
+  // fetchReports deliberately tracks the filter state; including its recreated function would retrigger every render.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  useEffect(() => { fetchReports() }, [statusFilter, categoryFilter, priorityFilter, page])
+  useEffect(() => { fetch(`${API_BASE}/admin/departments`).then(res => res.ok ? res.json() : null).then((json: { data?: { departments?: ApiDepartment[] } | ApiDepartment[] } | null) => { const data = json?.data; const list: ApiDepartment[] = Array.isArray(data) ? data : data?.departments || []; setDepartments(list.map(department => ({id:department.id,name:department.name || department.department_name || 'Unnamed department'}))) }).catch(() => setDepartments([{id:1,name:'Public Works'},{id:2,name:'Solid Waste Management'},{id:3,name:'Water Supply'}])) }, [])
+  const categories = useMemo(() => [...new Set(reports.map(r => r.category).filter(Boolean) as string[])], [reports])
+  const filtered = useMemo(() => { const q=query.trim().toLowerCase(); return [...reports].filter(r => !q || [r.title,r.description,r.reported_by?.name,r.id].some(value => value?.toLowerCase().includes(q))).sort((a,b) => { const result=String(a[sortField] || '').localeCompare(String(b[sortField] || '')); return sortDir==='asc'?result:-result }) }, [reports,query,sortField,sortDir])
+  const toggleSort = (field: typeof sortField) => { if(field===sortField)setSortDir(value => value==='asc'?'desc':'asc'); else {setSortField(field);setSortDir('asc')} }
+  const clearFilters = () => { setStatusFilter('');setCategoryFilter('');setPriorityFilter('');setQuery('');setPage(1) }
+  const useDemo = () => { const list=demoComplaints as unknown as Report[]; setReports(list);setTotal(list.length);setError(null) }
+  const startAction = (report:Report, next:Action) => { setOpenMenu(null);setActionReport(report);setAction(next);setActionValue('') }
+  const performAction = async () => { if(!actionReport || !action) return; const body = action==='assign' ? {department_id:Number(actionValue)} : action==='resolve' ? {status:'resolved',resolution:actionValue} : {status:'rejected',reject_reason:actionValue}; setActionLoading(true); try { const response=await fetch(`${API_BASE}/admin/issues/${actionReport.id}`, {method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)}); if(!response.ok)throw new Error('The update could not be saved.'); setReports(old => old.map(report => report.id!==actionReport.id ? report : {...report,status: action==='resolve'?'resolved':action==='reject'?'rejected':report.status, department:action==='assign'?departments.find(d=>d.id===Number(actionValue)):report.department})); setAction(null);setActionReport(null) } catch(err) { setError(err instanceof Error ? err.message:'The update could not be saved.') } finally {setActionLoading(false)} }
+  const statusClass = (status?:string) => `report-status ${status || 'reported'}`
+  const priorityClass = (priority?:string) => `report-priority ${priority || 'unassigned'}`
+  return <div className="reports-page">
+    <section className="reports-top"><div><h2>Report management</h2><p>Review citizen requests and keep every case moving to resolution.</p></div><div className="reports-top-actions"><button className="report-button secondary" onClick={useDemo}>Use demo data</button><button className="report-button primary" onClick={fetchReports}>↻ Refresh reports</button></div></section>
+    <section className="report-summary"><div><span>Visible reports</span><strong>{loading ? '—' : filtered.length}</strong></div><div><span>Awaiting assignment</span><strong>{reports.filter(r=>!r.department).length}</strong></div><div><span>In progress</span><strong>{reports.filter(r=>r.status==='in_progress').length}</strong></div><div><span>Resolved</span><strong>{reports.filter(r=>r.status==='resolved').length}</strong></div></section>
+    <section className="reports-workspace">
+      <aside className="report-filters"><div className="filter-heading"><div><h3>Filters</h3><p>Narrow the work queue</p></div><button onClick={clearFilters} disabled={!statusFilter&&!categoryFilter&&!priorityFilter&&!query}>Clear</button></div><label>Search<input value={query} onChange={e=>setQuery(e.target.value)} placeholder="ID, title or reporter" /></label><label>Status<select value={statusFilter} onChange={e=>{setStatusFilter(e.target.value);setPage(1)}}><option value="">All statuses</option><option value="reported">Reported</option><option value="in_progress">In progress</option><option value="resolved">Resolved</option><option value="rejected">Rejected</option></select></label><label>Priority<select value={priorityFilter} onChange={e=>{setPriorityFilter(e.target.value);setPage(1)}}><option value="">All priorities</option><option value="urgent">Urgent</option><option value="high">High</option><option value="medium">Medium</option><option value="low">Low</option></select></label><label>Category<select value={categoryFilter} onChange={e=>{setCategoryFilter(e.target.value);setPage(1)}}><option value="">All categories</option>{categories.map(category=><option key={category}>{category}</option>)}</select></label></aside>
+      <div className="report-table-card"><div className="table-toolbar"><div><h3>All reports</h3><p>{total || filtered.length} reports in this workspace</p></div><span className="table-status-dot">Live data</span></div>{error && <div className="report-error"><span>!</span>{error}<button onClick={fetchReports}>Try again</button></div>}{loading ? <div className="report-loading"><i /> Loading reports…</div> : filtered.length===0 ? <div className="report-empty"><div>⌕</div><h3>No reports found</h3><p>Try changing your filters, or load the demo dataset.</p><button className="report-button secondary" onClick={clearFilters}>Clear filters</button></div> : <div className="report-table-wrap"><table className="report-table"><thead><tr><th>Report</th><th><button onClick={()=>toggleSort('category')}>Category {sortField==='category' && (sortDir==='asc'?'↑':'↓')}</button></th><th><button onClick={()=>toggleSort('priority')}>Priority {sortField==='priority' && (sortDir==='asc'?'↑':'↓')}</button></th><th>Status</th><th>Assignment</th><th><button onClick={()=>toggleSort('created_at')}>Reported {sortField==='created_at' && (sortDir==='asc'?'↑':'↓')}</button></th><th><span className="sr-only">Actions</span></th></tr></thead><tbody>{filtered.map(report=><tr key={report.id}><td><button className="report-name" onClick={()=>setSelected(report)}>{report.title}<small>#{report.id.slice(-8)} · {report.reported_by?.name || 'Anonymous resident'}</small></button></td><td><span className="category-cell">{label(report.category)}</span></td><td><span className={priorityClass(report.priority)}>{label(report.priority)}</span></td><td><span className={statusClass(report.status)}><i />{label(report.status)}</span></td><td><span className="assignment-cell">{report.department?.name || 'Unassigned'}</span></td><td><time>{report.created_at ? new Date(report.created_at).toLocaleDateString(undefined,{day:'numeric',month:'short',year:'numeric'}) : '—'}</time></td><td className="action-cell"><button className="row-menu-button" aria-label={`Actions for ${report.title}`} onClick={()=>setOpenMenu(openMenu===report.id?null:report.id)}>•••</button>{openMenu===report.id && <div className="row-menu"><button onClick={()=>{setSelected(report);setOpenMenu(null)}}>View details</button><button onClick={()=>startAction(report,'assign')}>Assign department</button><button onClick={()=>setMapReport(report)}>View on map</button><hr /><button onClick={()=>startAction(report,'resolve')} className="menu-success">Mark resolved</button><button onClick={()=>startAction(report,'reject')} className="menu-danger">Reject report</button></div>}</td></tr>)}</tbody></table></div>}<div className="report-pagination"><span>Page {page} · Showing {filtered.length} of {total || filtered.length}</span><div><button disabled={page===1} onClick={()=>setPage(p=>p-1)}>Previous</button><button disabled={filtered.length<20} onClick={()=>setPage(p=>p+1)}>Next</button></div></div></div>
+    </section>
+    {selected && <div className="report-modal-backdrop" onMouseDown={()=>setSelected(null)}><section className="report-modal detail-modal" onMouseDown={e=>e.stopPropagation()} role="dialog" aria-modal="true"><button className="modal-close" onClick={()=>setSelected(null)} aria-label="Close">×</button><header><span className={statusClass(selected.status)}><i />{label(selected.status)}</span><h2>{selected.title}</h2><p>#{selected.id} · {label(selected.category)} {selected.subcategory && ` / ${label(selected.subcategory)}`}</p></header><div className="detail-content"><div className="detail-main"><h3>Report details</h3><p>{selected.description || 'No additional description was provided by the resident.'}</p>{selected.image_url && <img src={selected.image_url} alt="Reported issue" />}{selected.voice_note_url && <audio controls src={selected.voice_note_url} />}</div><aside className="detail-meta"><div><span>Priority</span><b className={priorityClass(selected.priority)}>{label(selected.priority)}</b></div><div><span>Department</span><strong>{selected.department?.name || 'Unassigned'}</strong></div><div><span>Reported by</span><strong>{selected.reported_by?.name || 'Anonymous resident'}</strong><small>{selected.reported_by?.phone}</small></div><div><span>Location</span><strong>{selected.location?.address || 'Location unavailable'}</strong></div></aside></div><footer><button className="report-button secondary" onClick={()=>setMapReport(selected)}>View on map</button><button className="report-button secondary" onClick={()=>startAction(selected,'assign')}>Assign</button><button className="report-button primary" onClick={()=>startAction(selected,'resolve')}>Mark resolved</button></footer></section></div>}
+    {mapReport && <div className="report-modal-backdrop" onMouseDown={()=>setMapReport(null)}><section className="report-modal map-modal" onMouseDown={e=>e.stopPropagation()}><button className="modal-close" onClick={()=>setMapReport(null)} aria-label="Close">×</button><h2>{mapReport.title}</h2><p>{mapReport.location?.address || 'Reported location'}</p>{mapReport.location ? <OLMap reports={[{id:mapReport.id,title:mapReport.title,longitude:mapReport.location.longitude,latitude:mapReport.location.latitude}]} /> : <div className="map-empty">This report has no location coordinates.</div>}</section></div>}
+    {action && actionReport && <div className="report-modal-backdrop"><section className="report-modal action-modal" role="dialog" aria-modal="true"><button className="modal-close" onClick={()=>setAction(null)} aria-label="Close">×</button><h2>{action==='assign'?'Assign department':action==='resolve'?'Resolve report':'Reject report'}</h2><p>{action==='assign'?`Choose the responsible team for “${actionReport.title}”.`:action==='resolve'?'Add a brief resolution note for the audit trail.':'Add a reason before rejecting this citizen report.'}</p>{action==='assign'?<select value={actionValue} onChange={e=>setActionValue(e.target.value)}><option value="">Select a department</option>{departments.map(dept=><option key={dept.id} value={dept.id}>{dept.name}</option>)}</select>:<textarea autoFocus rows={4} value={actionValue} onChange={e=>setActionValue(e.target.value)} placeholder={action==='resolve'?'Describe the resolution':'Explain the reason for rejection'} />}<footer><button className="report-button secondary" onClick={()=>setAction(null)}>Cancel</button><button className={`report-button ${action==='reject'?'danger':'primary'}`} disabled={!actionValue.trim()||actionLoading} onClick={performAction}>{actionLoading?'Saving…':action==='assign'?'Assign department':action==='resolve'?'Mark resolved':'Reject report'}</button></footer></section></div>}
+  </div>
 }
-
 export default ReportsPage

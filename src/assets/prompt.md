@@ -63,10 +63,8 @@ Use the reference from the `request-response-schema-admin.md` file and integrate
      ```
    - Show user-friendly alerts (e.g., “Failed to load reports”, “Action successful”).
 
-9. **Authentication**
-   - Include Bearer token in all requests.
-   - Token can be retrieved from `localStorage` or session context.
-   - Redirect to login page if 401/403 response is received.
+9. **Public access**
+   - The dashboard must be accessible without a login, token, or session.
 
 ---
 
@@ -86,7 +84,7 @@ Use the reference from the `request-response-schema-admin.md` file and integrate
 - `GET /admin/issues` → Fetch all issues
 - `GET /admin/issues/locations` → Fetch coordinates for map
 - `PATCH /admin/issues/:id` or similar (if exists) → For assigning, marking resolved, or rejecting
-- Use token-based header authentication
+- Do not require client-side authentication or authorization headers
 
 
 Use the following reference for request and response schemas in the `request-response-schema-admin.md` file:

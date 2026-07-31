@@ -1,70 +1,26 @@
-import { type ChangeEvent, type ReactElement, useMemo, useState } from 'react'
+import { type ChangeEvent, type ReactElement, useEffect, useMemo, useState } from 'react'
+import { Link } from 'react-router-dom'
 import departmentsCsv from './departments.csv?raw'
 import './DepartmentsPage.css'
 
-interface Department {
-  name: string
-  function: string
-}
+type Department = { id?: number; name: string; function: string; status: 'Active' | 'Inactive' }
+type ApiDepartment = { id?: number; name?: string; department_name?: string; function?: string; description?: string; status?: string }
+const API_BASE = import.meta.env.VITE_CIVICOPS_API_BASE || 'https://civic-ops.onrender.com'
 
-const parseCSV = (csv: string): Department[] => {
-  const lines = csv.trim().split('\n')
-  const rows = lines.slice(1) // skip header
-  return rows.map(line => {
-    // simple CSV parse by first comma split
-    const [name, ...rest] = line.split(',')
-    const fn = rest.join(',').trim()
-    return { name: name.trim(), function: fn }
-  })
-}
+const parseCSV = (csv: string): Department[] => csv.trim().split('\n').slice(1).map(line => { const [name,...rest] = line.split(','); return {name:name.trim(),function:rest.join(',').trim(),status:'Active'} })
+const initials = (name:string) => name.split(/\s+/).filter(word=>word.length>2).slice(0,2).map(word=>word[0]).join('').toUpperCase()
 
 const DepartmentsPage = (): ReactElement => {
-  const [query, setQuery] = useState('')
-
-  const departments = useMemo(() => parseCSV(departmentsCsv), [])
-
-  const filtered = useMemo(() => {
-    const q = query.toLowerCase().trim()
-    if (!q) return departments
-    return departments.filter(d => d.name.toLowerCase().includes(q) || d.function.toLowerCase().includes(q))
-  }, [departments, query])
-
-  const onSearch = (e: ChangeEvent<HTMLInputElement>) => setQuery(e.target.value)
-
-  return (
-    <div className="departments-page-container">
-      <h1 className="departments-page-header">Departments</h1>
-      <p className="departments-page-description">Manage municipal departments</p>
-
-      <div style={{ marginTop: 12, marginBottom: 12 }}>
-        <input
-          className="input"
-          placeholder="Search departments or functions..."
-          value={query}
-          onChange={onSearch}
-        />
-      </div>
-
-      <div className="table-container">
-        <table className="table">
-          <thead>
-            <tr>
-              <th>Department</th>
-              <th>Function</th>
-            </tr>
-          </thead>
-          <tbody>
-            {filtered.map((d, i) => (
-              <tr key={i}>
-                <td>{d.name}</td>
-                <td>{d.function}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-    </div>
-  )
+  const [departments,setDepartments] = useState<Department[]>(() => parseCSV(departmentsCsv)); const [query,setQuery] = useState(''); const [status,setStatus] = useState('All'); const [loading,setLoading] = useState(false); const [error,setError] = useState<string | null>(null); const [selected,setSelected] = useState<Department | null>(null); const [source,setSource] = useState<'live'|'catalog'>('catalog')
+  const refresh = async () => { setLoading(true);setError(null); try { const response=await fetch(`${API_BASE}/admin/departments`);if(!response.ok)throw new Error('Department service is unavailable.');const json=await response.json() as {data?:{departments?:ApiDepartment[]}|ApiDepartment[]};const data=json.data;const list=Array.isArray(data)?data:data?.departments || [];if(!list.length)throw new Error('The department service returned no departments.');setDepartments(list.map(department=>({id:department.id,name:department.name || department.department_name || 'Unnamed department',function:department.function || department.description || 'Municipal service delivery',status:department.status?.toLowerCase()==='inactive'?'Inactive':'Active'})));setSource('live') } catch(err) { setError(err instanceof Error ? err.message:'Could not update departments.');setDepartments(parseCSV(departmentsCsv));setSource('catalog') } finally {setLoading(false)} }
+  useEffect(()=>{refresh()},[])
+  const filtered=useMemo(()=>{const q=query.toLowerCase().trim();return departments.filter(department=>(!q || department.name.toLowerCase().includes(q)||department.function.toLowerCase().includes(q))&&(status==='All'||department.status===status))},[departments,query,status])
+  const onSearch=(event:ChangeEvent<HTMLInputElement>)=>setQuery(event.target.value)
+  return <div className="departments-page-container">
+    <section className="departments-top"><div><h2>Department operations</h2><p>Directory, responsibilities and service ownership across the municipality.</p></div><div className="department-actions"><span className={`department-source ${source}`}><i />{source==='live'?'Live directory':'Service catalog'}</span><button onClick={refresh} disabled={loading}>{loading?'Syncing…':'↻ Sync departments'}</button></div></section>
+    <section className="department-summary"><article><span>Total departments</span><strong>{departments.length}</strong><small>Municipal service owners</small></article><article><span>Active departments</span><strong>{departments.filter(department=>department.status==='Active').length}</strong><small>Available to receive work</small></article><article><span>Service catalog</span><strong>{new Set(departments.map(department=>department.function)).size}</strong><small>Defined operational functions</small></article></section>
+    <section className="department-directory"><div className="directory-head"><div><h3>Department directory</h3><p>Find the responsible team for any service area.</p></div><div className="directory-controls"><input value={query} onChange={onSearch} placeholder="Search a department or service" /><select value={status} onChange={event=>setStatus(event.target.value)}><option>All</option><option>Active</option><option>Inactive</option></select></div></div>{error && <div className="department-error"><span>!</span>{error}<button onClick={refresh}>Retry</button></div>}{loading && !departments.length ? <div className="department-loading"><i />Loading departments…</div> : filtered.length===0 ? <div className="department-empty"><div>⌕</div><h3>No departments match</h3><p>Try a different department name, service or status.</p><button onClick={()=>{setQuery('');setStatus('All')}}>Clear filters</button></div> : <div className="department-grid">{filtered.map(department=><article className="department-card" key={department.id || department.name}><div className="department-card-top"><span className="department-avatar">{initials(department.name)}</span><span className={`department-status ${department.status.toLowerCase()}`}><i />{department.status}</span></div><h3>{department.name}</h3><p>{department.function}</p><footer><button onClick={()=>setSelected(department)}>View responsibilities</button><Link to="/reports">Open reports <span>→</span></Link></footer></article>)}</div>}</section>
+    {selected && <div className="department-modal-backdrop" onMouseDown={()=>setSelected(null)}><section className="department-modal" onMouseDown={event=>event.stopPropagation()} role="dialog" aria-modal="true"><button className="department-modal-close" onClick={()=>setSelected(null)} aria-label="Close">×</button><span className="department-avatar large">{initials(selected.name)}</span><span className={`department-status ${selected.status.toLowerCase()}`}><i />{selected.status}</span><h2>{selected.name}</h2><p>{selected.function}</p><div className="department-modal-note"><strong>Service ownership</strong><span>Use this team as the accountable department when assigning reports in its service area.</span></div><footer><Link to="/reports">Manage assigned reports</Link><button onClick={()=>setSelected(null)}>Close</button></footer></section></div>}
+  </div>
 }
-
 export default DepartmentsPage

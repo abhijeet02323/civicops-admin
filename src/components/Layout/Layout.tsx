@@ -1,72 +1,61 @@
-import React from 'react';
-import { useLocation } from 'react-router-dom';
-import Sidebar from '../Sidebar/Sidebar';
-import './Layout.css'; // Import the new CSS file
+import React, { useEffect, useRef, useState } from 'react'
+import { useLocation } from 'react-router-dom'
+import Sidebar from '../Sidebar/Sidebar'
+import './Layout.css'
 
-interface LayoutProps {
-  children: React.ReactNode;
+interface LayoutProps { children: React.ReactNode }
+
+const pageCopy: Record<string, { title: string; subtitle: string }> = {
+  '/': { title: 'Operations overview', subtitle: 'Keep civic services moving, every day.' },
+  '/reports': { title: 'Reports', subtitle: 'Review, assign and resolve citizen requests.' },
+  '/analytics': { title: 'Analytics', subtitle: 'Understand service performance across the city.' },
+  '/departments': { title: 'Departments', subtitle: 'Coordinate teams and workloads.' },
+  '/field-staffs': { title: 'Field workforce', subtitle: 'Monitor task delivery and completion evidence.' },
+  '/users': { title: 'Users', subtitle: 'Manage administrator access.' },
+  '/settings': { title: 'Settings', subtitle: 'Configure your CivicOps workspace.' },
 }
 
 const Layout: React.FC<LayoutProps> = ({ children }) => {
-  const location = useLocation();
+  const { pathname } = useLocation()
+  const [profileOpen, setProfileOpen] = useState(false)
+  const [now, setNow] = useState(() => new Date())
+  const profileRef = useRef<HTMLDivElement>(null)
+  const page = pageCopy[pathname] ?? { title: 'CivicOps', subtitle: 'Municipal operations workspace.' }
 
-  const getPageTitle = () => {
-    switch (location.pathname) {
-      case '/':
-        return 'Dashboard';
-      case '/reports':
-        return 'Reports';
-      case '/users':
-        return 'Users';
-      case '/settings':
-        return 'Settings';
-      default:
-        return 'Dashboard';
+  useEffect(() => {
+    const close = (event: MouseEvent) => {
+      if (profileRef.current && !profileRef.current.contains(event.target as Node)) setProfileOpen(false)
     }
-  };
+    document.addEventListener('mousedown', close)
+    return () => document.removeEventListener('mousedown', close)
+  }, [])
 
-  return (
-    <div className="layout-container">
-      <Sidebar />
-      <div className="layout-content content-with-sidebar">
-        <header className="layout-header">
-          <div className="layout-header-inner">
-            <div>
-              <h2 className="layout-title">{getPageTitle()}</h2>
-              <p className="layout-subtitle">Welcome back to CivicOps Dashboard</p>
-            </div>
-            <div className="layout-header-actions">
-              <div className="layout-header-buttons">
-                <button className="notification-button">
-                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
-                  </svg>
-                  <span className="notification-badge"></span>
-                </button>
-                <button className="user-menu-button group">
-                  <div className="user-avatar-wrapper">
-                    <img 
-                      className="user-avatar" 
-                      src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80" 
-                      alt="User avatar" 
-                    />
-                    <span className="user-status-badge"></span>
-                  </div>
-                  <span className="user-name">Tom Cook</span>
-                  <svg className="user-dropdown-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                  </svg>
-                </button>
-              </div>
+  useEffect(() => { const timer = window.setInterval(() => setNow(new Date()), 1000); return () => window.clearInterval(timer) }, [])
+
+  return <div className="layout-container">
+    <Sidebar />
+    <div className="layout-content content-with-sidebar">
+      <header className="layout-header">
+        <div className="layout-header-inner">
+          <div className="page-intro"><p className="page-eyebrow">CIVICOPS / ADMIN</p><h1 className="layout-title">{page.title}</h1><p className="layout-subtitle">{page.subtitle}</p></div>
+          <div className="layout-header-actions">
+            <div className="admin-clock" title="Local system time"><strong>{now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}</strong><span>{now.toLocaleDateString([], { weekday: 'short', day: 'numeric', month: 'short' })}</span></div>
+            <button className="notification-button" type="button" aria-label="View 3 notifications" title="Notifications">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M15 17h5l-1.4-1.4a2 2 0 0 1-.6-1.4V11a6 6 0 0 0-4-5.66V5a2 2 0 1 0-4 0v.34A6 6 0 0 0 7 11v3.16c0 .53-.21 1.04-.59 1.42L5 17h5m5 0v1a3 3 0 0 1-6 0v-1" /></svg><span className="notification-badge">3</span>
+            </button>
+            <div className="profile-menu" ref={profileRef}>
+              <button className="user-menu-button" type="button" onClick={() => setProfileOpen(value => !value)} aria-expanded={profileOpen}>
+                <span className="user-avatar">AC</span><span className="user-identity"><strong>Admin CivicOps</strong><small>City administrator</small></span>
+                <svg className="user-dropdown-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="m6 9 6 6 6-6" /></svg>
+              </button>
+              {profileOpen && <div className="profile-popover" role="menu"><div className="profile-popover-head"><strong>Admin CivicOps</strong><span>admin@civicops.gov</span></div><button type="button" role="menuitem">My profile</button><button type="button" role="menuitem">Workspace settings</button><hr /><button type="button" role="menuitem" className="sign-out">Sign out</button></div>}
             </div>
           </div>
-        </header>
-        <main className="layout-main">
-          {children}
-        </main>
-      </div>
+        </div>
+      </header>
+      <main className="layout-main">{children}</main>
     </div>
-  );
-};
+  </div>
+}
 
-export default Layout;
+export default Layout
