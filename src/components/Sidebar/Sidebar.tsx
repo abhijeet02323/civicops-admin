@@ -51,10 +51,11 @@ const Sidebar = (): ReactElement => {
 
       <aside className={`sidebar-root ${open ? 'open' : ''}`} onClick={() => setOpen(false)}>
         <div className="sidebar-header">
-          <h1 className="text-2xl font-bold">CivicOps</h1>
-          <p className="text-sm text-gray-400">Admin Dashboard</p>
+          <div className="brand-mark">C</div>
+          <div><h1>CivicOps</h1><p>Municipal operations</p></div>
         </div>
 
+        <p className="sidebar-section-label">WORKSPACE</p>
         <nav className="sidebar-nav">
           {navItems.map((item) => (
             <Link
@@ -67,6 +68,7 @@ const Sidebar = (): ReactElement => {
             </Link>
           ))}
         </nav>
+        <div className="sidebar-footer"><span className="sidebar-footer-dot" /><div><strong>System operational</strong><small>All services running normally</small></div></div>
       </aside>
     </>
   )

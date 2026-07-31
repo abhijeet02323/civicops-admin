@@ -1,114 +1,36 @@
 import { type ReactElement } from 'react'
+import { Link } from 'react-router-dom'
 import StatsCard from '../../components/StatsCard/StatsCard'
 import RecentReportCard from '../../components/RecentReportCard/RecentReportCard'
-import OLMap from '../../components/Map/Map.tsx'
-import './DashboardPage.css' // Import the new CSS file
+import OLMap from '../../components/Map/Map'
+import './DashboardPage.css'
 
 const DashboardPage = (): ReactElement => {
-  const statsData = [
-    {
-      title: 'Total Reports',
-      value: '1,247',
-      change: { value: '+12%', trend: 'up' as const },
-      icon: (
-        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-        </svg>
-      )
-    },
-    {
-      title: 'Resolved Today',
-      value: '43',
-      change: { value: '+8%', trend: 'up' as const },
-      icon: (
-        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-        </svg>
-      )
-    },
-    {
-      title: 'In Progress',
-      value: '89',
-      change: { value: '-5%', trend: 'down' as const },
-      icon: (
-        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-        </svg>
-      )
-    },
-    {
-      title: 'Active Users',
-      value: '2,156',
-      change: { value: '+15%', trend: 'up' as const },
-      icon: (
-        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-        </svg>
-      )
-    }
-  ];
-
+  const stats = [
+    { title: 'Total Reports', value: '1,247', change: { value: '+12%', trend: 'up' as const }, icon: '▤' },
+    { title: 'Resolved Today', value: '43', change: { value: '+8%', trend: 'up' as const }, icon: '✓' },
+    { title: 'In Progress', value: '89', change: { value: '5 fewer', trend: 'up' as const }, icon: '◷' },
+    { title: 'Active Users', value: '2,156', change: { value: '+15%', trend: 'up' as const }, icon: '◎' },
+  ]
   const recentReports = [
-    {
-      title: 'Pothole on Main Street',
-      location: 'Main St & 5th Ave',
-      // sample coordinates in lon/lat (India)
-      longitude: 72.8777,
-      latitude: 19.0760,
-      priority: 'High' as const,
-      status: 'In Progress' as const
-    },
-    {
-      title: 'Broken Streetlight',
-      location: 'Oak St & 2nd Ave',
-      longitude: 77.1025,
-      latitude: 28.7041,
-      priority: 'Medium' as const,
-      status: 'Pending' as const
-    }
-  ];
-
-  return (
-    <div className="dashboard-page-container">
-      <div>
-        <h1 className="dashboard-page-header">Dashboard</h1>
-        <p className="dashboard-page-description">Manage civic reports and municipal operations</p>
-      </div>
-
-      <div className="stats-grid">
-        {statsData.map((stat, index) => (
-          <StatsCard
-            key={index}
-            title={stat.title}
-            value={stat.value}
-            change={stat.change}
-            icon={stat.icon}
-          />
-        ))}
-      </div>
-      <div style={{ marginTop: 24 }}>
-        <h2 className="recent-reports-header">Map View</h2>
-        <OLMap
-          reports={recentReports.map((r, i) => ({ id: i, title: r.title, longitude: r.longitude as number, latitude: r.latitude as number }))}
-        />
-      </div>
-
-      <div>
-        <h2 className="recent-reports-header">Recent Reports</h2>
-        <div>
-          {recentReports.map((report, index) => (
-            <RecentReportCard
-              key={index}
-              title={report.title}
-              location={report.location}
-              priority={report.priority}
-              status={report.status}
-            />
-          ))}
-        </div>
-      </div>
-    </div>
-  );
-};
-
-export default DashboardPage;
+    { title:'Pothole on Main Street', location:'Main St & 5th Ave', longitude:72.8777, latitude:19.0760, priority:'High' as const, status:'In Progress' as const },
+    { title:'Broken streetlight', location:'Oak St & 2nd Ave', longitude:77.1025, latitude:28.7041, priority:'Medium' as const, status:'Pending' as const },
+    { title:'Overflowing waste bin', location:'Market Road, Ward 12', longitude:73.8567, latitude:18.5204, priority:'High' as const, status:'Pending' as const },
+  ]
+  return <div className="dashboard-page-container">
+    <section className="dashboard-welcome">
+      <div><h2>Good morning, Admin</h2><p>Here is what needs your attention across the city today.</p></div>
+      <Link className="dashboard-primary-action" to="/reports">Review pending reports <span>→</span></Link>
+    </section>
+    <section className="stats-grid">{stats.map(stat => <StatsCard key={stat.title} title={stat.title} value={stat.value} change={stat.change} icon={<span className="metric-symbol">{stat.icon}</span>} />)}</section>
+    <section className="attention-grid">
+      <div className="attention-card"><div className="attention-icon danger">!</div><div><strong>12 reports need assignment</strong><p>New cases are waiting for a department owner.</p></div><Link to="/reports">Assign now</Link></div>
+      <div className="attention-card"><div className="attention-icon warning">◷</div><div><strong>7 service targets are at risk</strong><p>These reports are close to their resolution deadline.</p></div><Link to="/reports">View cases</Link></div>
+    </section>
+    <section className="dashboard-workspace">
+      <div className="dashboard-panel map-panel"><div className="panel-heading"><div><h3>Issue map</h3><p>Latest reports across municipal zones</p></div><span className="live-pill"><i /> Live</span></div><OLMap reports={recentReports.map((r, id) => ({ id, title:r.title, longitude:r.longitude, latitude:r.latitude }))} /></div>
+      <div className="dashboard-panel queue-panel"><div className="panel-heading"><div><h3>Priority queue</h3><p>Newest cases requiring review</p></div><Link to="/reports">View all</Link></div><div className="queue-list">{recentReports.map(report => <RecentReportCard key={report.title} {...report} />)}</div></div>
+    </section>
+  </div>
+}
+export default DashboardPage

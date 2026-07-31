@@ -25,7 +25,9 @@ interface OLMapProps {
   reports?: ReportLocation[]
 }
 
-const OLMap: React.FC<OLMapProps> = ({ center = [78.9629, 20.5937], zoom = 4, reports = [] }) => {
+const DEFAULT_CENTER: [number, number] = [78.9629, 20.5937]
+
+const OLMap: React.FC<OLMapProps> = ({ center = DEFAULT_CENTER, zoom = 4, reports = [] }) => {
   const mapRef = useRef<HTMLDivElement | null>(null)
   const mapObj = useRef<Map | null>(null)
 
@@ -50,13 +52,13 @@ const OLMap: React.FC<OLMapProps> = ({ center = [78.9629, 20.5937], zoom = 4, re
       mapObj.current?.setTarget(undefined)
       mapObj.current = null
     }
-  }, [])
+  }, [center, zoom])
 
   useEffect(() => {
     if (!mapObj.current) return
 
     // remove previous report layers
-    const existing = mapObj.current.getLayers().getArray().filter(l => (l as any).get('name') === 'reports-layer')
+    const existing = mapObj.current.getLayers().getArray().filter(layer => layer.get('name') === 'reports-layer')
     existing.forEach(l => mapObj.current?.removeLayer(l))
 
     if (!reports || reports.length === 0) return
@@ -80,7 +82,7 @@ const OLMap: React.FC<OLMapProps> = ({ center = [78.9629, 20.5937], zoom = 4, re
       source: vectorSource
     })
     // mark the layer so we can remove it later
-    ;(vectorLayer as any).set('name', 'reports-layer')
+    vectorLayer.set('name', 'reports-layer')
 
     mapObj.current.addLayer(vectorLayer)
 
@@ -93,7 +95,7 @@ const OLMap: React.FC<OLMapProps> = ({ center = [78.9629, 20.5937], zoom = 4, re
       mapObj.current.getView().fit(extent, { padding: [50, 50, 50, 50], maxZoom: 12 })
     }
 
-  }, [reports])
+  }, [reports, zoom])
 
   return <div className="ol-map-container" ref={mapRef} />
 }
