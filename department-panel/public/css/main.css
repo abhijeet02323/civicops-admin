@@ -10,8 +10,6 @@ body{margin:0;background:var(--bg);color:#0f172a}
 .cards-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:16px}
 .card{background:white;padding:16px;border-radius:8px;box-shadow:0 6px 18px rgba(2,6,23,0.06)}
 .card-value{font-size:24px;font-weight:700;margin-top:8px}
-.auth-wrap{display:flex;align-items:center;justify-content:center;height:80vh}
-.auth-card{background:white;padding:20px;border-radius:10px;box-shadow:0 8px 24px rgba(2,6,23,0.08);width:360px}
 .form-row{margin-bottom:12px}
 .input{display:block;width:100%;padding:8px;border:1px solid #e6eef8;border-radius:6px}
 .btn-primary{background:var(--blue);color:white;padding:8px 12px;border-radius:6px;border:none}

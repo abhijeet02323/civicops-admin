@@ -1,6 +1,5 @@
 import { type ReactElement, useEffect, useMemo, useState } from 'react'
 import './ReportsPage.css'
-import auth from '../../services/auth'
 import OLMap from '../../components/Map/Map'
 import demoComplaints from './demo-complaints.json'
 
@@ -57,15 +56,13 @@ const ReportsPage = (): ReactElement => {
   const [formValue, setFormValue] = useState('')
   const [activeIssueId, setActiveIssueId] = useState<string | null>(null)
 
-  const token = auth.getToken()
-
   useEffect(() => {
     fetchDepartments()
   }, [])
 
   const fetchDepartments = async () => {
     try {
-      const resp = await fetch(`${API_BASE}/admin/departments`, { headers: { Authorization: `Bearer ${token}` } })
+      const resp = await fetch(`${API_BASE}/admin/departments`)
       if (resp.ok) {
         const json = await resp.json()
         // assuming json.data or json
@@ -99,13 +96,7 @@ const ReportsPage = (): ReactElement => {
       params.append('page', String(page))
       params.append('limit', String(limit))
 
-      const res = await fetch(`${API_BASE}/admin/issues?${params.toString()}`, {
-        headers: { Authorization: token ? `Bearer ${token}` : '' }
-      })
-      if (res.status === 401 || res.status === 403) {
-        window.location.href = '/login'
-        return
-      }
+      const res = await fetch(`${API_BASE}/admin/issues?${params.toString()}`)
       if (!res.ok) {
         const err = await res.json().catch(() => ({ detail: 'Failed to load' }))
         throw new Error(err.detail || 'Failed to load reports')
@@ -184,7 +175,7 @@ const ReportsPage = (): ReactElement => {
 
   const openMapFor = async (r: Report) => {
     try {
-      const res = await fetch(`${API_BASE}/admin/issues/locations?category=&status=&priority=`, { headers: { Authorization: token ? `Bearer ${token}` : '' } })
+      const res = await fetch(`${API_BASE}/admin/issues/locations?category=&status=&priority=`)
       const json = await res.json()
       const locs = json.data?.locations || []
       // center on selected
@@ -200,7 +191,7 @@ const ReportsPage = (): ReactElement => {
   const doAssignDepartment = async (issueId: string, deptId: number) => {
     setActionLoading(true)
     try {
-      const res = await fetch(`${API_BASE}/admin/issues/${issueId}`, { method: 'PATCH', headers: { 'Content-Type':'application/json', Authorization: token ? `Bearer ${token}` : '' }, body: JSON.stringify({ department_id: deptId }) })
+      const res = await fetch(`${API_BASE}/admin/issues/${issueId}`, { method: 'PATCH', headers: { 'Content-Type':'application/json' }, body: JSON.stringify({ department_id: deptId }) })
       if (!res.ok) throw new Error('Failed to assign')
       // update local
       setReports(prev => prev.map(r => r.id === issueId ? { ...r, department: departments.find(d => d.id === deptId) } : r))
@@ -213,7 +204,7 @@ const ReportsPage = (): ReactElement => {
   const doReject = async (issueId: string, reason: string) => {
     setActionLoading(true)
     try {
-      const res = await fetch(`${API_BASE}/admin/issues/${issueId}`, { method: 'PATCH', headers: { 'Content-Type':'application/json', Authorization: token ? `Bearer ${token}` : '' }, body: JSON.stringify({ status: 'rejected', reject_reason: reason }) })
+      const res = await fetch(`${API_BASE}/admin/issues/${issueId}`, { method: 'PATCH', headers: { 'Content-Type':'application/json' }, body: JSON.stringify({ status: 'rejected', reject_reason: reason }) })
       if (!res.ok) throw new Error('Failed to reject')
       setReports(prev => prev.map(r => r.id === issueId ? { ...r, status: 'rejected' } : r))
       alert('Rejected')
@@ -225,7 +216,7 @@ const ReportsPage = (): ReactElement => {
   const doResolve = async (issueId: string, resolution: string) => {
     setActionLoading(true)
     try {
-      const res = await fetch(`${API_BASE}/admin/issues/${issueId}`, { method: 'PATCH', headers: { 'Content-Type':'application/json', Authorization: token ? `Bearer ${token}` : '' }, body: JSON.stringify({ status: 'resolved', resolution: resolution }) })
+      const res = await fetch(`${API_BASE}/admin/issues/${issueId}`, { method: 'PATCH', headers: { 'Content-Type':'application/json' }, body: JSON.stringify({ status: 'resolved', resolution: resolution }) })
       if (!res.ok) throw new Error('Failed to resolve')
       setReports(prev => prev.map(r => r.id === issueId ? { ...r, status: 'resolved' } : r))
       alert('Marked as resolved')
