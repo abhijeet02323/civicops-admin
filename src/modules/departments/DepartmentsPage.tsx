@@ -2,17 +2,17 @@ import { type ChangeEvent, type ReactElement, useEffect, useMemo, useState } fro
 import { Link } from 'react-router-dom'
 import departmentsCsv from './departments.csv?raw'
 import './DepartmentsPage.css'
+import { apiFetch } from '../../lib/api'
 
 type Department = { id?: number; name: string; function: string; status: 'Active' | 'Inactive' }
 type ApiDepartment = { id?: number; name?: string; department_name?: string; function?: string; description?: string; status?: string }
-const API_BASE = import.meta.env.VITE_CIVICOPS_API_BASE || 'https://civic-ops.onrender.com'
 
 const parseCSV = (csv: string): Department[] => csv.trim().split('\n').slice(1).map(line => { const [name,...rest] = line.split(','); return {name:name.trim(),function:rest.join(',').trim(),status:'Active'} })
 const initials = (name:string) => name.split(/\s+/).filter(word=>word.length>2).slice(0,2).map(word=>word[0]).join('').toUpperCase()
 
 const DepartmentsPage = (): ReactElement => {
   const [departments,setDepartments] = useState<Department[]>(() => parseCSV(departmentsCsv)); const [query,setQuery] = useState(''); const [status,setStatus] = useState('All'); const [loading,setLoading] = useState(false); const [error,setError] = useState<string | null>(null); const [selected,setSelected] = useState<Department | null>(null); const [source,setSource] = useState<'live'|'catalog'>('catalog')
-  const refresh = async () => { setLoading(true);setError(null); try { const response=await fetch(`${API_BASE}/admin/departments`);if(!response.ok)throw new Error('Department service is unavailable.');const json=await response.json() as {data?:{departments?:ApiDepartment[]}|ApiDepartment[]};const data=json.data;const list=Array.isArray(data)?data:data?.departments || [];if(!list.length)throw new Error('The department service returned no departments.');setDepartments(list.map(department=>({id:department.id,name:department.name || department.department_name || 'Unnamed department',function:department.function || department.description || 'Municipal service delivery',status:department.status?.toLowerCase()==='inactive'?'Inactive':'Active'})));setSource('live') } catch(err) { setError(err instanceof Error ? err.message:'Could not update departments.');setDepartments(parseCSV(departmentsCsv));setSource('catalog') } finally {setLoading(false)} }
+  const refresh = async () => { setLoading(true);setError(null); try { const response=await apiFetch('/admin/departments');if(!response.ok)throw new Error('Department service is unavailable.');const json=await response.json() as {data?:{departments?:ApiDepartment[]}|ApiDepartment[]};const data=json.data;const list=Array.isArray(data)?data:data?.departments || [];if(!list.length)throw new Error('The department service returned no departments.');setDepartments(list.map(department=>({id:department.id,name:department.name || department.department_name || 'Unnamed department',function:department.function || department.description || 'Municipal service delivery',status:department.status?.toLowerCase()==='inactive'?'Inactive':'Active'})));setSource('live') } catch(err) { setError(err instanceof Error ? err.message:'Could not update departments.');setDepartments(parseCSV(departmentsCsv));setSource('catalog') } finally {setLoading(false)} }
   useEffect(()=>{refresh()},[])
   const filtered=useMemo(()=>{const q=query.toLowerCase().trim();return departments.filter(department=>(!q || department.name.toLowerCase().includes(q)||department.function.toLowerCase().includes(q))&&(status==='All'||department.status===status))},[departments,query,status])
   const onSearch=(event:ChangeEvent<HTMLInputElement>)=>setQuery(event.target.value)
